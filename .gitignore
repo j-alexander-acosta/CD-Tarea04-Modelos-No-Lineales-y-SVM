@@ -19,3 +19,7 @@ ENV/
 # Testing & caches
 .pytest_cache/
 .coverage
+
+# Generated outputs
+pesos.txt
+analisis-error.txt

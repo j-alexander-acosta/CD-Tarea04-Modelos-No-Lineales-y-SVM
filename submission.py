@@ -79,7 +79,7 @@ T = TypeVar("T")
 #   * el clasificador de 6-gramas de caracteres (20 épocas, eta = 0,01,
 #     entrenado sobre el corpus real) le dé puntaje negativo.
 # BEGIN_TU_CODIGO
-P2_RESENA = ''
+P2_RESENA = 'pésimomente horriblemente desastrosamente basúricamente'
 # END_TU_CODIGO
 
 
@@ -97,17 +97,17 @@ P2_RESENA = ''
 # Cuántos vectores de soporte quedan con cada C (la columna «vec. sop.»,
 # el conteo y no el porcentaje).
 # BEGIN_TU_CODIGO
-SVM_VECTORES_DE_SOPORTE = {0.1: None, 1: None, 10: None, 100: None}
+SVM_VECTORES_DE_SOPORTE = {0.1: 3540, 1: 2484, 10: 1697, 100: 1288}
 # END_TU_CODIGO
 
 # Error de entrenamiento de cada uno de esos clasificadores.
 # BEGIN_TU_CODIGO
-SVM_ERROR_ENTRENAMIENTO = {0.1: None, 1: None, 10: None, 100: None}
+SVM_ERROR_ENTRENAMIENTO = {0.1: 0.4266, 1: 0.1511, 10: 0.1488, 100: 0.1528}
 # END_TU_CODIGO
 
 # Error de validación de cada uno de esos clasificadores.
 # BEGIN_TU_CODIGO
-SVM_ERROR_VALIDACION = {0.1: None, 1: None, 10: None, 100: None}
+SVM_ERROR_VALIDACION = {0.1: 0.4657, 1: 0.3042, 10: 0.2994, 100: 0.3039}
 # END_TU_CODIGO
 
 
@@ -121,13 +121,13 @@ SVM_ERROR_VALIDACION = {0.1: None, 1: None, 10: None, 100: None}
 # Error de validación del SVM entrenado sobre el mapa polinomial de grado 2,
 # con las mismas cuatro claves del barrido de C.
 # BEGIN_TU_CODIGO
-SVM_GRADO2_ERROR_VALIDACION = {0.1: None, 1: None, 10: None, 100: None}
+SVM_GRADO2_ERROR_VALIDACION = {0.1: 0.2994, 1: 0.2991, 10: 0.3016, 100: 0.2991}
 # END_TU_CODIGO
 
 # Error de validación del SGD sin regularización del Problema 1b entrenado
 # sobre esas mismas dos características (la última línea del comando).
 # BEGIN_TU_CODIGO
-SGD_ERROR_VALIDACION = None
+SGD_ERROR_VALIDACION = 0.3042
 # END_TU_CODIGO
 
 
@@ -422,10 +422,18 @@ def entrenar_svm_margen_suave(X: np.ndarray, y: np.ndarray, C: float,
     b = 0.0
 
     # BEGIN_TU_CODIGO
-    raise NotImplementedError("Completa esta parte")
+    for _ in range(epocas):
+        scores = X @ w + b
+        margins = y * scores
+        v = (margins < 1.0).astype(float)
+        vy = v * y
+        grad_w = w - (C / n) * (X.T @ vy)
+        grad_b = - (C / n) * np.sum(vy)
+        w -= eta * grad_w
+        b -= eta * grad_b
     # END_TU_CODIGO
 
-    return w, b
+    return w, float(b)
 
 
 def indices_vectores_de_soporte(X: np.ndarray, y: np.ndarray, w: np.ndarray,
@@ -448,7 +456,9 @@ def indices_vectores_de_soporte(X: np.ndarray, y: np.ndarray, w: np.ndarray,
     :return: arreglo de índices en orden creciente, de tipo entero.
     """
     # BEGIN_TU_CODIGO
-    raise NotImplementedError("Completa esta parte")
+    margins = y * (X @ w + b)
+    indices = np.where(margins <= 1.0 + tol)[0]
+    return np.asarray(indices, dtype=int)
     # END_TU_CODIGO
 
 
@@ -466,7 +476,9 @@ def error_de_clasificacion(X: np.ndarray, y: np.ndarray, w: np.ndarray,
     :return: número entre 0 y 1.
     """
     # BEGIN_TU_CODIGO
-    raise NotImplementedError("Completa esta parte")
+    scores = X @ w + b
+    preds = np.where(scores >= 0, 1.0, -1.0)
+    return float(np.mean(preds != y))
     # END_TU_CODIGO
 
 
@@ -486,7 +498,7 @@ def kernel_polinomial(a: np.ndarray, b: np.ndarray, grado: int = 2,
     :return: el valor del kernel, como ``float`` de Python.
     """
     # BEGIN_TU_CODIGO
-    raise NotImplementedError("Completa esta parte")
+    return float((np.dot(a, b) + coef0) ** grado)
     # END_TU_CODIGO
 
 
@@ -499,7 +511,8 @@ def kernel_rbf(a: np.ndarray, b: np.ndarray, gamma: float = 0.5) -> float:
     :return: el valor del kernel, como ``float`` de Python.
     """
     # BEGIN_TU_CODIGO
-    raise NotImplementedError("Completa esta parte")
+    diff = np.asarray(a, dtype=float) - np.asarray(b, dtype=float)
+    return float(np.exp(-gamma * np.dot(diff, diff)))
     # END_TU_CODIGO
 
 
@@ -527,7 +540,15 @@ def mapa_polinomial_grado2(x: np.ndarray) -> np.ndarray:
     x = np.asarray(x, dtype=float)
 
     # BEGIN_TU_CODIGO
-    raise NotImplementedError("Completa esta parte")
+    d = len(x)
+    coords = [1.0]
+    sqrt2 = np.sqrt(2.0)
+    coords.extend(sqrt2 * x)
+    coords.extend(x * x)
+    for i in range(d):
+        for j in range(i + 1, d):
+            coords.append(sqrt2 * x[i] * x[j])
+    return np.array(coords, dtype=float)
     # END_TU_CODIGO
 
 
